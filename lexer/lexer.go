@@ -32,6 +32,16 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
+// peekChar() is similar to readChar() except it does not increment
+// our position pointers, and neither pushes the read char into l.ch
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
+}
+
 // Produces a token based on char read in current byte slot
 // and then reads a new char into that
 func (l *Lexer) NextToken() token.Token {
@@ -39,13 +49,27 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 	switch l.ch {
 	case '=':
-		tok = newToken(token.ASSIGN, l.ch)
+		if string(l.peekChar()) == "=" {
+			oldCh := l.ch
+			l.readChar()
+			literal := string(oldCh) + string(l.ch)
+			tok = newTokenWithStr(token.EQ, literal)
+		} else {
+			tok = newToken(token.ASSIGN, l.ch)
+		}
 	case '+':
 		tok = newToken(token.PLUS, l.ch)
 	case '-':
 		tok = newToken(token.MINUS, l.ch)
 	case '!':
-		tok = newToken(token.BANG, l.ch)
+		if l.peekChar() == '=' {
+			oldCh := l.ch
+			l.readChar()
+			literal := string(oldCh) + string(l.ch)
+			tok = newTokenWithStr(token.NOT_EQ, literal)
+		} else {
+			tok = newToken(token.BANG, l.ch)
+		}
 	case '/':
 		tok = newToken(token.SLASH, l.ch)
 	case '*':
@@ -115,6 +139,13 @@ func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{
 		Type:    tokenType,
 		Literal: string(ch),
+	}
+}
+
+func newTokenWithStr(tokenType token.TokenType, literal string) token.Token {
+	return token.Token{
+		Type:    tokenType,
+		Literal: literal,
 	}
 }
 
