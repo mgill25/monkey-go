@@ -20,6 +20,10 @@ func NewParser(l *lexer.Lexer) *Parser {
 	return p
 }
 
+// <t1, t2, t3>
+// nextToken(): curToken = nil, peekToken = t1
+// nextToken(): curToken = t1,  peekToken = t2
+// nextToken(): curToken = t2,  peekToken = t3
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
 	p.peekToken = p.l.NextToken()
