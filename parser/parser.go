@@ -74,6 +74,9 @@ func (p *Parser) curTokenIs(t token.TokenType) bool {
 func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
+
+// assertion fn: peeks + advances to call nextToken() only if its type is correct
+// supposedly nearly all parsers share such functions.
 func (p *Parser) expectPeek(t token.TokenType) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
