@@ -35,6 +35,7 @@ type Identifier struct {
 	Value string
 }
 
+// PS: Identifier does not have to be an Expression but it is to keep things simple for now
 func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 
