@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/mgill25/monkey-go/evaluator"
 	"github.com/mgill25/monkey-go/lexer"
 	"github.com/mgill25/monkey-go/parser"
 )
@@ -40,8 +41,11 @@ func Start(in io.Reader, out io.Writer) {
 			printParserErrors(out, p.Errors())
 			continue
 		}
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 		// Scan all the tokens in this line via the lexer
 		// for {
 		// 	tok := l.NextToken()
