@@ -21,39 +21,43 @@ var (
 // Eval is the heart of the interpreter. It takes an AST and evaluates it to an object.
 // It is responsible for evaluating each node in the AST and returning the corresponding object.
 // It is a recursive function that evaluates each node in the AST and returns the corresponding object.
-func Eval(node ast.Node) object.Object {
+func Eval(node ast.Node, env *object.Environment) object.Object {
 	// fmt.Printf("calling Eval() on node %v\n", node)
 	switch node := node.(type) {
 	case *ast.Program:
-		return evalProgram(node.Statements)
+		return evalProgram(node.Statements, env)
 	case *ast.ExpressionStatement:
-		return Eval(node.Expression)
+		return Eval(node.Expression, env)
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.PrefixExpression:
-		right := Eval(node.Right)
+		right := Eval(node.Right, env)
 		if isError(right) {
 			return right
 		}
 		return evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
-		left := Eval(node.Left)
+		left := Eval(node.Left, env)
 		if isError(left) {
 			return left
 		}
-		right := Eval(node.Right)
+		right := Eval(node.Right, env)
 		if isError(right) {
 			return right
 		}
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.BlockStatement:
-		return evalBlockStatements(node)
+		return evalBlockStatements(node, env)
 	case *ast.IfExpression:
-		return evalIfExpression(node)
+		return evalIfExpression(node, env)
 	case *ast.ReturnStatement:
-		return evalReturnStatement(node)
+		return evalReturnStatement(node, env)
+	case *ast.LetStatement:
+		return evalLetStatement(node, env)
+	case *ast.Identifier:
+		return evalIdentifier(node, env)
 	}
 	return nil
 }
@@ -65,10 +69,10 @@ func nativeBoolToBooleanObject(input bool) *object.Boolean {
 	return FALSE
 }
 
-func evalProgram(statements []ast.Statement) object.Object {
+func evalProgram(statements []ast.Statement, env *object.Environment) object.Object {
 	var result object.Object
 	for _, stmt := range statements {
-		result = Eval(stmt)
+		result = Eval(stmt, env)
 		switch result := result.(type) {
 		case *object.Error:
 			return result
@@ -79,10 +83,10 @@ func evalProgram(statements []ast.Statement) object.Object {
 	return result
 }
 
-func evalBlockStatements(block *ast.BlockStatement) object.Object {
+func evalBlockStatements(block *ast.BlockStatement, env *object.Environment) object.Object {
 	var result object.Object
 	for _, statement := range block.Statements {
-		result = Eval(statement)
+		result = Eval(statement, env)
 		if result != nil {
 			resultType := result.Type()
 			if resultType == object.RETURN_VALUE_OBJ || resultType == object.ERROR_OBJ {
@@ -165,15 +169,15 @@ func evalIntegerInfixExpression(operator string, left, right object.Object) obje
 	}
 }
 
-func evalIfExpression(ie *ast.IfExpression) object.Object {
-	condition := Eval(ie.Condition)
+func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Object {
+	condition := Eval(ie.Condition, env)
 	if isError(condition) {
 		return condition
 	}
 	if isTruthy(condition) {
-		return Eval(ie.Consequence)
+		return Eval(ie.Consequence, env)
 	} else if ie.Alternative != nil {
-		return Eval(ie.Alternative)
+		return Eval(ie.Alternative, env)
 	} else {
 		return NULL
 	}
@@ -192,8 +196,8 @@ func isTruthy(obj object.Object) bool {
 	}
 }
 
-func evalReturnStatement(rs *ast.ReturnStatement) object.Object {
-	val := Eval(rs.ReturnValue)
+func evalReturnStatement(rs *ast.ReturnStatement, env *object.Environment) object.Object {
+	val := Eval(rs.ReturnValue, env)
 	if isError(val) {
 		return val
 	}
@@ -209,4 +213,21 @@ func isError(obj object.Object) bool {
 		return obj.Type() == object.ERROR_OBJ
 	}
 	return false
+}
+
+func evalLetStatement(letStmt *ast.LetStatement, env *object.Environment) object.Object {
+	val := Eval(letStmt.Value, env)
+	if isError(val) {
+		return val
+	}
+	env.Set(letStmt.Name.Value, val)
+	return val
+}
+
+func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
+	val, ok := env.Get(node.Value)
+	if !ok {
+		return newError("identifier not found: %s", node.Value)
+	}
+	return val
 }
