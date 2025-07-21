@@ -281,7 +281,9 @@ func applyFunction(fn object.Object, args []object.Object) object.Object {
 }
 
 func extendFunctionEnv(fn *object.Function, args []object.Object) *object.Environment {
+	// fn.Env becomes the parent environment of the new environment
 	env := object.NewEnclosedEnvironment(fn.Env)
+	// Initialize the new env with the function's parameters and arguments
 	for paramIdx, param := range fn.Parameters {
 		env.Set(param.Value, args[paramIdx])
 	}
