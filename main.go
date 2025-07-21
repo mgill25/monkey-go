@@ -24,7 +24,6 @@ func main() {
 		fmt.Printf("Feel free to type in commands\n")
 		repl.StartRepl(os.Stdin, os.Stdout)
 	} else {
-		fmt.Printf("Will parse the file at path: %s\n", *fileFlagPtr)
 		var filePath string
 		if !path.IsAbs(*fileFlagPtr) {
 			filePath = filepath.Join(".", *fileFlagPtr)

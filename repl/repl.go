@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/mgill25/monkey-go/ast"
 	"github.com/mgill25/monkey-go/evaluator"
 	"github.com/mgill25/monkey-go/lexer"
 	"github.com/mgill25/monkey-go/object"
@@ -51,24 +52,34 @@ func StartRepl(in io.Reader, out io.Writer) {
 	}
 }
 
+// EvalFile reads the entire file, parses it, and evaluates each statement
+// individually, printing the result of each expression like the REPL does
 func EvalFile(in io.Reader, out io.Writer) {
-	scanner := bufio.NewScanner(in)
+	content, err := io.ReadAll(in)
+	if err != nil {
+		fmt.Fprintf(out, "Error reading file: %v\n", err)
+		return
+	}
+
 	env := object.NewEnvironment()
-	lineNum := 1
-	for scanner.Scan() {
-		line := scanner.Text()
-		lineNum++
-		l := lexer.New(line)
-		p := parser.NewParser(l)
-		program := p.ParseProgram()
-		if len(p.Errors()) != 0 {
-			printParserErrors(out, p.Errors())
-			continue
-		}
-		evaluated := evaluator.Eval(program, env)
+	l := lexer.New(string(content))
+	p := parser.NewParser(l)
+	program := p.ParseProgram()
+
+	if len(p.Errors()) != 0 {
+		printParserErrors(out, p.Errors())
+		return
+	}
+
+	for _, stmt := range program.Statements {
+		evaluated := evaluator.Eval(stmt, env)
 		if evaluated != nil {
-			io.WriteString(out, evaluated.Inspect())
-			io.WriteString(out, "\n")
+			// Only print results for expression statements, not let statements
+			switch stmt.(type) {
+			case *ast.ExpressionStatement:
+				io.WriteString(out, evaluated.Inspect())
+				io.WriteString(out, "\n")
+			}
 		}
 	}
 }
