@@ -26,7 +26,7 @@ const MONKEY_FACE = `
                '-----'
 `
 
-func Start(in io.Reader, out io.Writer) {
+func StartRepl(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 	env := object.NewEnvironment()
 	for {
@@ -48,14 +48,28 @@ func Start(in io.Reader, out io.Writer) {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
 		}
-		// Scan all the tokens in this line via the lexer
-		// for {
-		// 	tok := l.NextToken()
-		// 	if tok.Type == token.EOF {
-		// 		break
-		// 	}
-		// 	fmt.Printf("%+v\n", tok)
-		// }
+	}
+}
+
+func EvalFile(in io.Reader, out io.Writer) {
+	scanner := bufio.NewScanner(in)
+	env := object.NewEnvironment()
+	lineNum := 1
+	for scanner.Scan() {
+		line := scanner.Text()
+		lineNum++
+		l := lexer.New(line)
+		p := parser.NewParser(l)
+		program := p.ParseProgram()
+		if len(p.Errors()) != 0 {
+			printParserErrors(out, p.Errors())
+			continue
+		}
+		evaluated := evaluator.Eval(program, env)
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 	}
 }
 
