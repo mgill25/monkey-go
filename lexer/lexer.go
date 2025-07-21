@@ -45,6 +45,7 @@ func (l *Lexer) peekChar() byte {
 // Produces a token based on char read in current byte slot
 // and then reads a new char into that
 func (l *Lexer) NextToken() token.Token {
+parseToken:
 	var tok token.Token
 	l.skipWhitespace()
 	switch l.ch {
@@ -70,8 +71,13 @@ func (l *Lexer) NextToken() token.Token {
 		} else {
 			tok = newToken(token.BANG, l.ch)
 		}
-	case '/':
-		tok = newToken(token.SLASH, l.ch)
+	case '/': // found first SLASH
+		if l.peekChar() == '/' { // Check if the next one is also a SLASH
+			l.skipComment()
+			goto parseToken
+		} else {
+			tok = newToken(token.SLASH, l.ch)
+		}
 	case '*':
 		tok = newToken(token.ASTERISK, l.ch)
 	case '<':
@@ -112,6 +118,12 @@ func (l *Lexer) NextToken() token.Token {
 
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
+
+func (l *Lexer) skipComment() {
+	for l.ch != '\n' && l.ch != '\r' && l.ch != 0 {
 		l.readChar()
 	}
 }
