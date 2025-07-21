@@ -1,8 +1,9 @@
 package lexer
 
 import (
-	"github.com/mgill25/monkey-go/token"
 	"testing"
+
+	"github.com/mgill25/monkey-go/token"
 )
 
 func TestNextToken(t *testing.T) {
@@ -134,6 +135,62 @@ if (5 < 10) {
 		{token.EOF, ""},
 	}
 
+	l := New(input)
+	for i, tt := range tests {
+		tok := l.NextToken()
+		if tok.Type != tt.expectedType {
+			t.Fatalf("tests[%d] - tokenType wrong. expected: %q, got: %q", i, tt.expectedType, tok.Type)
+		}
+
+		if tok.Literal != tt.expectedLiteral {
+			t.Fatalf("tests[%d] - literal wrong. expected: %q, got: %q", i, tt.expectedLiteral, tok.Literal)
+		}
+	}
+}
+
+func TestNextTokenV3(t *testing.T) {
+	input := `
+"foobar"
+"foo bar"
+`
+	tests := []struct {
+		expectedType    token.TokenType
+		expectedLiteral string
+	}{
+		{token.STRING, "foobar"},
+		{token.STRING, "foo bar"},
+		{token.EOF, ""},
+	}
+	l := New(input)
+	for i, tt := range tests {
+		tok := l.NextToken()
+		if tok.Type != tt.expectedType {
+			t.Fatalf("tests[%d] - tokenType wrong. expected: %q, got: %q", i, tt.expectedType, tok.Type)
+		}
+
+		if tok.Literal != tt.expectedLiteral {
+			t.Fatalf("tests[%d] - literal wrong. expected: %q, got: %q", i, tt.expectedLiteral, tok.Literal)
+		}
+	}
+}
+
+func TestNextTokenV4(t *testing.T) {
+	input := `
+[1, 2, 3]
+`
+	tests := []struct {
+		expectedType    token.TokenType
+		expectedLiteral string
+	}{
+		{token.LBRACKET, "["},
+		{token.INT, "1"},
+		{token.COMMA, ","},
+		{token.INT, "2"},
+		{token.COMMA, ","},
+		{token.INT, "3"},
+		{token.RBRACKET, "]"},
+		{token.EOF, ""},
+	}
 	l := New(input)
 	for i, tt := range tests {
 		tok := l.NextToken()

@@ -9,3 +9,8 @@ sum(a, b);
 sum(b, c);
 let total = sum(a, sum(b, c));
 total;
+let makeGreeter = fn(greeting) { fn(name) { greeting + " " + name + "!" } };
+let hello = makeGreeter("Hello");
+hello("manish")
+let heythere = makeGreeter("Hey there");
+heythere("manish")
