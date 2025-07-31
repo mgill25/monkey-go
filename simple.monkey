@@ -57,3 +57,12 @@ let reduce = fn(arr, initial, f) {
 
 let sum = fn(a, b) { a + b };
 reduce([1, 2, 3, 4, 5], 0, sum);
+
+let myhash = { "name": "Jimmy", "age": 72, "band": "Led Zeppelin" };
+myhash["name"];
+myhash["age"];
+
+// We can also add booleans and integers as keys to the hashmap in Monkey
+let anotherHash = { true: "yes, a boolean", 99: "correct, an integer" };
+anotherHash[true];
+anotherHash[99];
