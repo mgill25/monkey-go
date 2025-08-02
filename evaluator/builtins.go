@@ -1,6 +1,9 @@
 package evaluator
 
-import "github.com/mgill25/monkey-go/object"
+import (
+	"fmt"
+	"github.com/mgill25/monkey-go/object"
+)
 
 var builtins = map[string]*object.Builtin{
 	"len": &object.Builtin{
@@ -82,6 +85,14 @@ var builtins = map[string]*object.Builtin{
 			default:
 				return newError("argument to `push` must be ARRAY, got %s", arg.Type())
 			}
+		},
+	},
+	"puts": &object.Builtin{
+		Fn: func(args ...object.Object) object.Object {
+			for _, arg := range args {
+				fmt.Println(arg.Inspect())
+			}
+			return NULL
 		},
 	},
 }

@@ -66,3 +66,16 @@ myhash["age"];
 let anotherHash = { true: "yes, a boolean", 99: "correct, an integer" };
 anotherHash[true];
 anotherHash[99];
+
+// hashmap
+let people = [{"name": "Alice", "age": 24}, {"name": "Anna", "age": 28}];
+people[0]["name"];
+people[1]["name"];
+people[0]["age"] + people[1]["age"];
+
+let getName = fn(person) {
+	return person["name"];
+};
+
+getName(people[0]);
+getName(people[1]);
