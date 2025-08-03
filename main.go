@@ -17,13 +17,14 @@ func main() {
 	}
 
 	fileFlagPtr := flag.String("file", "", "Supply a file")
+	vmFlagPtr := flag.Bool("vm", true, "VM mode or not")
 	flag.Parse()
 
-	if *fileFlagPtr == "" {
+	if *fileFlagPtr == "" && *vmFlagPtr == false {
 		fmt.Printf("Hello %s! This is the new Monkey programming language!\n", user.Username)
 		fmt.Printf("Feel free to type in commands\n")
-		repl.StartRepl(os.Stdin, os.Stdout)
-	} else {
+		repl.StartRepl(os.Stdin, os.Stdout, false)
+	} else if *fileFlagPtr != "" && *vmFlagPtr == false {
 		var filePath string
 		if !path.IsAbs(*fileFlagPtr) {
 			filePath = filepath.Join(".", *fileFlagPtr)
@@ -38,5 +39,7 @@ func main() {
 		}
 		defer file.Close()
 		repl.EvalFile(file, os.Stdout)
+	} else if *vmFlagPtr {
+		repl.StartRepl(os.Stdin, os.Stdout, true)
 	}
 }

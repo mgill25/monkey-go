@@ -6,10 +6,12 @@ import (
 	"io"
 
 	"github.com/mgill25/monkey-go/ast"
+	"github.com/mgill25/monkey-go/compiler"
 	"github.com/mgill25/monkey-go/evaluator"
 	"github.com/mgill25/monkey-go/lexer"
 	"github.com/mgill25/monkey-go/object"
 	"github.com/mgill25/monkey-go/parser"
+	"github.com/mgill25/monkey-go/vm"
 )
 
 const PROMPT = "#> "
@@ -27,7 +29,54 @@ const MONKEY_FACE = `
                '-----'
 `
 
-func StartRepl(in io.Reader, out io.Writer) {
+func StartRepl(in io.Reader, out io.Writer, vmMode bool) {
+	if !vmMode {
+		StartReplEval(in, out)
+	} else {
+		StartReplVM(in, out)
+	}
+}
+
+func StartReplVM(in io.Reader, out io.Writer) {
+	scanner := bufio.NewScanner(in)
+	for {
+		fmt.Printf(PROMPT)
+		scanned := scanner.Scan()
+		if !scanned {
+			return
+		}
+		line := scanner.Text()
+		l := lexer.New(line)
+		p := parser.NewParser(l)
+		program := p.ParseProgram()
+		if len(p.Errors()) != 0 {
+			printParserErrors(out, p.Errors())
+			continue
+		}
+
+		comp := compiler.New()
+		fmt.Printf("repl: compiling the program to bytecode\n")
+		err := comp.Compile(program)
+		if err != nil {
+			fmt.Fprintf(out, "Woops! Compilation failed: \n %s\n", err)
+			continue
+		}
+		bytecode := comp.Bytecode()
+		fmt.Printf("repl: bytecode emitted successfully\n")
+		machine := vm.New(bytecode)
+		fmt.Printf("repl: vm initialized. Will start running it now...\n")
+		err = machine.Run()
+		if err != nil {
+			fmt.Fprintf(out, "Woops! Executing bytecode failed:\n %s\n", err)
+			continue
+		}
+		stackTop := machine.StackTop()
+		io.WriteString(out, stackTop.Inspect())
+		io.WriteString(out, "\n")
+	}
+}
+
+func StartReplEval(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 	env := object.NewEnvironment()
 	for {
