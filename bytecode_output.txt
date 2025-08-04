@@ -1,0 +1,10 @@
+=== INSTRUCTIONS ===
+Length: 7 bytes
+0000 OpConstant 0
+0003 OpConstant 1
+0006 OpAdd
+
+=== CONSTANTS POOL ===
+Count: 2
+[0] *object.Integer: 1
+[1] *object.Integer: 2

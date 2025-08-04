@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"os"
 	"github.com/mgill25/monkey-go/ast"
 	"github.com/mgill25/monkey-go/code"
 	"github.com/mgill25/monkey-go/object"
@@ -102,4 +103,30 @@ func (c *Compiler) Bytecode() *Bytecode {
 type Bytecode struct {
 	Instructions code.Instructions
 	Constants    []object.Object
+}
+
+// WriteBytecodeToFile writes the compiled bytecode to a file for inspection
+func (c *Compiler) WriteBytecodeToFile(filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %v", err)
+	}
+	defer file.Close()
+
+	bytecode := c.Bytecode()
+	
+	// Write instructions as hex dump with disassembly
+	file.WriteString("=== INSTRUCTIONS ===\n")
+	file.WriteString(fmt.Sprintf("Length: %d bytes\n", len(bytecode.Instructions)))
+	file.WriteString(code.Instructions(bytecode.Instructions).String())
+	file.WriteString("\n")
+	
+	// Write constants pool
+	file.WriteString("=== CONSTANTS POOL ===\n")
+	file.WriteString(fmt.Sprintf("Count: %d\n", len(bytecode.Constants)))
+	for i, constant := range bytecode.Constants {
+		file.WriteString(fmt.Sprintf("[%d] %T: %s\n", i, constant, constant.Inspect()))
+	}
+	
+	return nil
 }
